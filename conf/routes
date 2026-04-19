@@ -13,3 +13,7 @@ POST    /beers                      controllers.BeerController.create()
 GET     /beers                      controllers.BeerController.list()
 GET     /beers/:id                  controllers.BeerController.findById(id: Long)
 DELETE  /beers/:id                  controllers.BeerController.delete(id: Long)
+
+POST    /beers/:id/judgings         controllers.JudgingController.create(id: Long)
+GET     /beers/:id/judgings         controllers.JudgingController.list(id: Long)
+GET     /beers/:id/score            controllers.JudgingController.score(id: Long)
