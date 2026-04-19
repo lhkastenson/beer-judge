@@ -10,3 +10,4 @@ target
 .metals
 .g8
 .vscode
+.bloop
