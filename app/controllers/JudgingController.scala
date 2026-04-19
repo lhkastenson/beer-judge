@@ -10,7 +10,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class JudgingController @Inject() (cc: ControllerComponents, judgingService: JudgingService, beerService: BeerService)(implicit ec: ExecutionContext) extends AbstractController {
+class JudgingController @Inject() (cc: ControllerComponents, judgingService: JudgingService, beerService: BeerService)(implicit ec: ExecutionContext) extends AbstractController(cc) {
     implicit val timestampFormat: Format[Timestamp] = new Format[Timestamp] {
         def reads(json: JsValue): JsResult[Timestamp] =
             json.validate[Long].map(new Timestamp(_))
