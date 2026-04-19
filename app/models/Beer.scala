@@ -1,5 +1,7 @@
 package models
 
+import java.sql.Timestamp
+
 case class Beer(
     id: Long,
     name: String,
