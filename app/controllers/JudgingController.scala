@@ -1,6 +1,6 @@
 package controllers
 
-import models.Judging
+import models.{Judging, ValidationError}
 import play.api.libs.json._
 import play.api.mvc._
 import services.{BeerService, JudgingService}
@@ -8,6 +8,7 @@ import services.{BeerService, JudgingService}
 import java.sql.Timestamp
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 @Singleton
 class JudgingController @Inject() (cc: ControllerComponents, judgingService: JudgingService, beerService: BeerService)(implicit ec: ExecutionContext) extends AbstractController(cc) {
@@ -31,8 +32,22 @@ class JudgingController @Inject() (cc: ControllerComponents, judgingService: Jud
                 val mouthfeel = (request.body \ "mouthfeel").as[Int]
                 val overall = (request.body \ "overall").as[Int]
                 val notes = (request.body \ "notes").asOpt[String]
-                judgingService.create(beerId, judgeName, aroma, appearance, flavor, mouthfeel, overall, notes)
-                    .map(j => Created(Json.toJson(j)))
+
+                val errors = List(
+                    Option.when(aroma < 0 || aroma > 12)(ValidationError("aroma", "Must be between 0 and 12")),
+                    Option.when(appearance < 0 || appearance > 3)(ValidationError("appearance", "Must be betwwen 0 and 3")),
+                    Option.when(flavor < 0 || flavor > 20)(ValidationError("flavor", "Must be between 0 and 20")),
+                    Option.when(mouthfeel < 0 || overall > 10)(ValidationError("mouthfeel", "Must be between 0 and 5")),
+                    Option.when(overall < 0 || overall > 10)(ValidationError("overall", "Must be between 0 and 10"))
+                ).flatten
+
+                if (errors.nonEmpty) {
+                    implicit val errorFormat: OFormat[ValidationError] = Json.format[ValidationError]
+                    Future.successful(UnprocessableEntity(Json.obj("errors" -> Json.toJson(errors))))
+                } else {
+                    judgingService.create(beerId, judgeName, aroma, appearance, flavor, mouthfeel, overall, notes)
+                        .map(j => Created(Json.toJson(j)))
+                }
         }
     }
 
