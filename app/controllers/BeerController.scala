@@ -1,6 +1,6 @@
 package controllers
 
-import models.Beer
+import models.{Beer, ValidationError}
 import play.api.libs.json._
 import play.api.mvc._
 import services.BeerService
@@ -25,7 +25,18 @@ class BeerController @Inject() (cc: ControllerComponents, beerService: BeerServi
             val name = (request.body \ "name").as[String]
             val style = (request.body \ "style").as[String]
             val brewery = (request.body \ "brewery").as[String]
-            beerService.create(name, style, brewery).map(beer => Created(Json.toJson(beer)))    
+
+            val errors = List(
+                Option.when(name.isBlank || name.length > 100)(ValidationError("name", "Required, max 100 characters")),
+                Option.when(style.isBlank || style.length > 100)(ValidationError("style", "Required, max 100 characters")),
+                Option.when(brewery.isBlank || brewery.length > 100)(ValidationError("brewery", "Required, max 100 characters"))
+            ).flatten
+            if (errors.nonEmpty) {
+                implicit val errorFormat: OFormat[ValidationError] = Json.format[ValidationError]
+                Future.successful(UnprocessableEntity(Json.obj("errors", -> Json.toJson(errors))))
+            } else {
+                beerService.create(name, style, brewery).map(beer => Created(Json.toJson(beer)))    
+            }
         }
 
         def list(): Action[AnyContent] = Action.async {

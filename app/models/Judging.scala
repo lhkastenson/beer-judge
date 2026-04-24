@@ -2,8 +2,6 @@ package models
 
 import java.sql.Timestamp
 
-case class ValidationError(field: String, message: String)
-
 case class Judging(
     id: Long,
     beerId: Long,
